@@ -1,0 +1,96 @@
+import numpy as np
+from sklearn.metrics import confusion_matrix
+
+
+def euclidean_distance(x, y):
+    return np.sqrt(np.sum((x - y)**2))
+
+
+def hierarchical_clustering(data, k):
+    n_samples, n_features = data.shape
+
+    # Initialize each sample as a cluster
+    clusters = [{'id': i, 'center': data[i], 'members': [i]}
+                for i in range(n_samples)]
+
+    # Merge clusters until there are k clusters
+    while len(clusters) > k:
+        # Find the pair of clusters with the smallest distance between them
+        min_distance = float('inf')
+        for i in range(len(clusters)):
+            for j in range(i+1, len(clusters)):
+                distance = euclidean_distance(
+                    clusters[i]['center'], clusters[j]['center'])
+                if distance < min_distance:
+                    min_distance = distance
+                    min_i, min_j = i, j
+
+        # Merge the two clusters with the smallest distance
+        merged_center = (clusters[min_i]['center'] +
+                         clusters[min_j]['center']) / 2
+        merged_members = clusters[min_i]['members'] + \
+            clusters[min_j]['members']
+        merged_cluster = {
+            'id': len(clusters), 'center': merged_center, 'members': merged_members}
+        del clusters[max(min_i, min_j)]
+        del clusters[min(min_i, min_j)]
+        clusters.append(merged_cluster)
+
+    # Assign cluster IDs to each sample
+    cluster_labels = np.zeros(n_samples)
+    for i, cluster in enumerate(clusters):
+        for member in cluster['members']:
+            cluster_labels[member] = i
+
+    return cluster_labels
+
+
+def knn_classify(train_data, train_labels, test_data, k):
+    n_train = train_data.shape[0]
+    n_test = test_data.shape[0]
+    predictions = np.zeros(n_test)
+
+    for i in range(n_test):
+        distances = [euclidean_distance(
+            test_data[i], train_data[j]) for j in range(n_train)]
+        nearest_indices = np.argsort(distances)[:k]
+        nearest_labels = train_labels[nearest_indices]
+        unique_labels, counts = np.unique(nearest_labels, return_counts=True)
+        max_count_label = unique_labels[np.argmax(counts)]
+        predictions[i] = max_count_label
+
+    return predictions
+
+
+data = np.loadtxt('Seed_Data.csv', delimiter=',', skiprows=1)
+data_features = data[:, :-1]
+data_labels = data[:, -1]  # Subtract 1 to make the labels 0-indexed
+
+# Normalize the features
+data_features = (data_features - np.mean(data_features, axis=0)
+                 ) / np.std(data_features, axis=0)
+
+# Perform hierarchical clustering to get cluster labels
+cluster_labels = hierarchical_clustering(data_features, k=3)
+
+# Split the data into training and test sets
+n_samples = data_features.shape[0]
+train_indices = np.random.choice(
+    n_samples, size=int(0.8*n_samples), replace=False)
+test_indices = np.setdiff1d(np.arange(n_samples), train_indices)
+train_data = data_features[train_indices]
+train_labels = cluster_labels[train_indices]
+test_data = data_features[test_indices]
+test_labels = cluster_labels[test_indices]
+
+# Perform K-nearest neighbor classification on the test set
+predictions = knn_classify(train_data, train_labels, test_data, k=3)
+predictions1 = knn_classify(train_data, train_labels, train_data, k=3)
+print('Confusion Matrix - Train: \n',
+      confusion_matrix(train_labels, predictions1))
+accuracy1 = np.mean(predictions1 == train_labels)
+print('Accuracy for Training data: ', accuracy1)
+print('Confusion Matrix - Test: \n', confusion_matrix(test_labels, predictions))
+# Compute the accuracy of the classifier
+accuracy = np.mean(predictions == test_labels)
+print('Accuracy for Testing data: ', accuracy)
