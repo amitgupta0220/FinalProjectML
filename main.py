@@ -1,9 +1,28 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
+'''
+Input:
+x: An array or vector representing the coordinates of the first point.
+y: An array or vector representing the coordinates of the second point.
+
+Output:
+The function returns a single value, which is the Euclidean distance between the two points x and y. The Euclidean distance is a measure of the straight-line distance between two points in Euclidean space. It is calculated as the square root of the sum of the squared differences between corresponding coordinates of the two points.
+'''
+
 
 def euclidean_distance(x, y):
     return np.sqrt(np.sum((x - y)**2))
+
+
+'''
+Input:
+data: A 2-dimensional array or matrix representing the dataset. Each row corresponds to a sample, and each column corresponds to a feature.
+k: An integer indicating the desired number of clusters to be formed.
+
+Output:
+The function returns an array cluster_labels of length n_samples, where n_samples is the number of samples in the dataset. Each element in cluster_labels represents the cluster assignment for the corresponding sample.
+'''
 
 
 def hierarchical_clustering(data, k):
@@ -45,6 +64,18 @@ def hierarchical_clustering(data, k):
     return cluster_labels
 
 
+'''
+Input:
+train_data: A 2-dimensional array or matrix representing the training dataset. Each row corresponds to a training sample, and each column corresponds to a feature.
+train_labels: An array or list containing the labels corresponding to the training samples. The length of train_labels should be equal to the number of rows in train_data.
+test_data: A 2-dimensional array or matrix representing the test dataset. Each row corresponds to a test sample, and each column corresponds to a feature.
+k: An integer indicating the number of nearest neighbors to consider for classification.
+
+Output:
+The function returns an array predictions of length n_test, where n_test is the number of samples in the test dataset. Each element in predictions represents the predicted label for the corresponding test sample.
+'''
+
+
 def knn_classify(train_data, train_labels, test_data, k):
     n_train = train_data.shape[0]
     n_test = test_data.shape[0]
@@ -64,7 +95,7 @@ def knn_classify(train_data, train_labels, test_data, k):
 
 data = np.loadtxt('Seed_Data.csv', delimiter=',', skiprows=1)
 data_features = data[:, :-1]
-data_labels = data[:, -1]  # Subtract 1 to make the labels 0-indexed
+data_labels = data[:, -1]
 
 # Normalize the features
 data_features = (data_features - np.mean(data_features, axis=0)
