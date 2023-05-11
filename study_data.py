@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import pandas as pd
+import seaborn as sns
 
 # read the dataset
-df = pd.read_csv('Seed_Data.csv', header=None)
-df.columns = ['A', 'P', 'C', 'LK', 'WK', 'A_Coef', 'LKG', 'target']
+df = pd.read_csv('Seed_Data.csv')
+# df.columns = ['A', 'P', 'C', 'LK', 'WK', 'A_Coef', 'LKG', 'target']
 
 # print the first few rows of the dataset
 print(df.head())
@@ -13,8 +14,5 @@ print(df.head())
 print(df.describe())
 
 
-# plot a histogram for each column in the dataframe
-for col in df.columns:
-    sns.histplot(df[col], kde=False)
-    plt.title(col)
-    plt.show()
+sns.pairplot(df)
+plt.show()

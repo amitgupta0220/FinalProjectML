@@ -62,6 +62,27 @@ def knn_classify(train_data, train_labels, test_data, k):
     return predictions
 
 
+def pca(data, n_components):
+    # Compute the covariance matrix
+    cov_matrix = np.cov(data.T)
+
+    # Perform eigendecomposition
+    eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
+
+    # Sort eigenvalues and eigenvectors in descending order
+    sorted_indices = np.argsort(eigenvalues)[::-1]
+    sorted_eigenvalues = eigenvalues[sorted_indices]
+    sorted_eigenvectors = eigenvectors[:, sorted_indices]
+
+    # Select the top n_components eigenvectors
+    selected_eigenvectors = sorted_eigenvectors[:, :n_components]
+
+    # Transform the data to the new subspace
+    transformed_data = np.dot(data, selected_eigenvectors)
+
+    return transformed_data
+
+
 data = np.loadtxt('Seed_Data.csv', delimiter=',', skiprows=1)
 data_features = data[:, :-1]
 data_labels = data[:, -1]  # Subtract 1 to make the labels 0-indexed
@@ -70,17 +91,23 @@ data_labels = data[:, -1]  # Subtract 1 to make the labels 0-indexed
 data_features = (data_features - np.mean(data_features, axis=0)
                  ) / np.std(data_features, axis=0)
 
-# Perform hierarchical clustering to get cluster labels
-cluster_labels = hierarchical_clustering(data_features, k=3)
+# Apply PCA to reduce dimensionality
+n_components = 2  # Set the desired number of components
+
+# Perform PCA on the data
+transformed_data = pca(data_features, n_components)
+
+# Perform hierarchical clustering on the transformed data to get cluster labels
+cluster_labels = hierarchical_clustering(transformed_data, k=3)
 
 # Split the data into training and test sets
-n_samples = data_features.shape[0]
+n_samples = transformed_data.shape[0]
 train_indices = np.random.choice(
     n_samples, size=int(0.8*n_samples), replace=False)
 test_indices = np.setdiff1d(np.arange(n_samples), train_indices)
-train_data = data_features[train_indices]
+train_data = transformed_data[train_indices]
 train_labels = cluster_labels[train_indices]
-test_data = data_features[test_indices]
+test_data = transformed_data[test_indices]
 test_labels = cluster_labels[test_indices]
 
 # Perform K-nearest neighbor classification on the test set
